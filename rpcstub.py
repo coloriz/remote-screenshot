@@ -22,10 +22,10 @@ function Get-Quser
     Param (
     )
 
-    $outputEncodingBackup = [System.Console]::OutputEncoding
-    [System.Console]::OutputEncoding = [System.Text.Encoding]::Default
+    $outputEncodingBackup = [Console]::OutputEncoding
+    [Console]::OutputEncoding = [Text.Encoding]::Default
     $result = quser 2>&1
-    [System.Console]::OutputEncoding = $outputEncodingBackup
+    [Console]::OutputEncoding = $outputEncodingBackup
 
     if ($LASTEXITCODE -ne 0)
     {
@@ -41,9 +41,9 @@ function Get-Quser
         $username = $_.Substring(0, $usernameLength)
         $_ = $_.Substring($usernameLength).Trim()
 
-        $parts = $_ -split '\s{2,}'
+        [Collections.ArrayList]$parts = $_ -split '\s{2,}'
 
-        if ($parts.Length -eq 4)
+        if ($parts.Count -eq 4)
         {
             $parts.Insert(0, '')
         }
@@ -73,7 +73,7 @@ if (-not (Test-Path $tempDir -PathType Container)) {
 try {
     Get-Command 'PsExec.exe' -ErrorAction Stop > $null
 } catch {
-    [System.Console]::Error.WriteLine("Command not found: 'PsExec.exe'") 
+    [Console]::Error.WriteLine("Command not found: 'PsExec.exe'") 
     exit 127
 }
 
@@ -83,25 +83,25 @@ $screenshotPath = Join-Path $tempDir 'b.jpg'
 $command = @'
 Add-Type -AssemblyName System.Windows.Forms,System.Drawing
 
-$screens = [System.Windows.Forms.Screen]::AllScreens
+$screens = [Windows.Forms.Screen]::AllScreens
 
 $top    = ($screens.Bounds.Top    | Measure-Object -Minimum).Minimum
 $left   = ($screens.Bounds.Left   | Measure-Object -Minimum).Minimum
 $width  = ($screens.Bounds.Right  | Measure-Object -Maximum).Maximum
 $height = ($screens.Bounds.Bottom | Measure-Object -Maximum).Maximum
 
-$bounds   = [System.Drawing.Rectangle]::FromLTRB($left, $top, $width, $height)
-$bmp      = New-Object System.Drawing.Bitmap ([int]$bounds.Width), ([int]$bounds.Height)
-$graphics = [System.Drawing.Graphics]::FromImage($bmp)
-$graphics.CopyFromScreen($bounds.Location, [System.Drawing.Point]::Empty, $bounds.Size)
-$bmp.Save('{0}', [System.Drawing.Imaging.ImageFormat]::Jpeg)
+$bounds   = [Drawing.Rectangle]::FromLTRB($left, $top, $width, $height)
+$bmp      = New-Object Drawing.Bitmap ([int]$bounds.Width), ([int]$bounds.Height)
+$graphics = [Drawing.Graphics]::FromImage($bmp)
+$graphics.CopyFromScreen($bounds.Location, [Drawing.Point]::Empty, $bounds.Size)
+$bmp.Save('{0}', [Drawing.Imaging.ImageFormat]::Jpeg)
 
 $graphics.Dispose()
 $bmp.Dispose()
 '@ -f $screenshotPath
 
-$bytes = [System.Text.Encoding]::Unicode.GetBytes($command)
-$encodedCommand = [System.Convert]::ToBase64String($bytes)
+$bytes = [Text.Encoding]::Unicode.GetBytes($command)
+$encodedCommand = [Convert]::ToBase64String($bytes)
 
 $vbs = @'
 Dim shell,command
@@ -128,8 +128,8 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 $lastWriteTime = (Get-Item $screenshotPath).LastWriteTime.ToString()
-$bytes = [System.IO.File]::ReadAllBytes($screenshotPath)
-$encodedBytes = [System.Convert]::ToBase64String($bytes)
+$bytes = [IO.File]::ReadAllBytes($screenshotPath)
+$encodedBytes = [Convert]::ToBase64String($bytes)
 
 ConvertTo-Json @{
     LastWriteTime = $lastWriteTime
